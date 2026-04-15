@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timbre | Mission Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #010814; color: #e0f7ff; font-family: 'Rajdhani', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  #stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .star { position: absolute; background: #fff; border-radius: 50%; animation: twinkle var(--d) ease-in-out infinite alternate; }
+  @keyframes twinkle { from { opacity: 0.1; transform: scale(1); } to { opacity: 1; transform: scale(1.3); } }
+
+  #gate { position: fixed; inset: 0; background: rgba(1,8,20,0.97); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(10px); }
+  .gate-box { border: 1px solid #00e5ff; border-radius: 16px; padding: 48px; text-align: center; background: rgba(0,229,255,0.03); box-shadow: 0 0 60px rgba(0,229,255,0.15); max-width: 400px; width: 90%; }
+  .gate-box h1 { font-family: 'Orbitron', monospace; font-size: 2rem; color: #00e5ff; letter-spacing: 6px; margin-bottom: 8px; text-shadow: 0 0 20px #00e5ff; }
+  .gate-box p { color: #7ecfdf; margin-bottom: 32px; font-size: 0.9rem; letter-spacing: 2px; }
+  .gate-box input { width: 100%; padding: 14px 20px; background: rgba(0,229,255,0.05); border: 1px solid #00e5ff44; border-radius: 8px; color: #00e5ff; font-family: 'Orbitron', monospace; font-size: 1rem; letter-spacing: 4px; text-align: center; outline: none; margin-bottom: 16px; transition: all 0.3s; }
+  .gate-box input:focus { border-color: #00e5ff; box-shadow: 0 0 20px rgba(0,229,255,0.3); }
+  .gate-box button { width: 100%; padding: 14px; background: linear-gradient(135deg,#00e5ff22,#00e5ff44); border: 1px solid #00e5ff; border-radius: 8px; color: #00e5ff; font-family: 'Orbitron', monospace; font-size: 0.9rem; letter-spacing: 3px; cursor: pointer; transition: all 0.3s; }
+  .gate-box button:hover { background: rgba(0,229,255,0.2); box-shadow: 0 0 30px rgba(0,229,255,0.4); }
+  .gate-error { color: #ff4f6a; font-size: 0.85rem; margin-top: 12px; letter-spacing: 1px; display: none; }
+
+  #app { position: relative; z-index: 1; padding: 20px; max-width: 1400px; margin: 0 auto; }
+
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding: 16px 24px; background: rgba(0,229,255,0.03); border: 1px solid rgba(0,229,255,0.15); border-radius: 12px; }
+  .logo { font-family: 'Orbitron', monospace; font-size: 1.8rem; font-weight: 900; color: #00e5ff; letter-spacing: 8px; text-shadow: 0 0 30px #00e5ff; }
+  .logo span { font-size: 0.7rem; display: block; letter-spacing: 4px; color: #7ecfdf; font-weight: 400; margin-top: -4px; }
+  .clock { font-family: 'Orbitron', monospace; font-size: 1.1rem; color: #00e5ff88; text-align: right; }
+  .clock .time { font-size: 1.6rem; color: #00e5ff; display: block; }
+
+  .sync-bar { text-align: center; font-family: 'Orbitron', monospace; font-size: 0.6rem; letter-spacing: 2px; color: #00e5ff44; margin-bottom: 16px; }
+  .sync-bar.syncing { color: #00e5ff; animation: badgePulse 1s infinite; }
+  .sync-bar.ok { color: #00ff78; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
+  .kpi-card { background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.2); border-radius: 10px; padding: 16px 20px; text-align: center; position: relative; overflow: hidden; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg,transparent,#00e5ff,transparent); animation: scanline 3s linear infinite; }
+  @keyframes scanline { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  .kpi-value { font-family: 'Orbitron', monospace; font-size: 2rem; font-weight: 700; color: #00e5ff; text-shadow: 0 0 15px #00e5ff; display: block; transition: all 0.5s; }
+  .kpi-label { font-size: 0.75rem; color: #7ecfdf; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+  .station-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+  .module { background: rgba(0,10,30,0.8); border-radius: 16px; padding: 20px; position: relative; overflow: hidden; transition: all 0.3s; backdrop-filter: blur(10px); }
+  .module.active { border: 1px solid rgba(0,255,120,0.4); box-shadow: 0 0 20px rgba(0,255,120,0.1),inset 0 0 30px rgba(0,255,120,0.03); animation: activePulse 3s ease-in-out infinite; }
+  .module.scheduled { border: 1px solid rgba(255,180,0,0.4); box-shadow: 0 0 20px rgba(255,180,0,0.1); }
+  .module.standby { border: 1px solid rgba(0,229,255,0.15); }
+  @keyframes activePulse { 0%,100% { box-shadow: 0 0 20px rgba(0,255,120,0.1),inset 0 0 30px rgba(0,255,120,0.03); } 50% { box-shadow: 0 0 35px rgba(0,255,120,0.2),inset 0 0 50px rgba(0,255,120,0.06); } }
+  .module-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .module-icon { font-size: 2rem; animation: bob 2.5s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .module-title { flex: 1; margin-left: 12px; }
+  .module-title h3 { font-family: 'Orbitron', monospace; font-size: 0.75rem; letter-spacing: 2px; color: #e0f7ff; }
+  .module-title p { font-size: 0.7rem; color: #7ecfdf; letter-spacing: 1px; margin-top: 2px; }
+  .status-badge { font-family: 'Orbitron', monospace; font-size: 0.55rem; padding: 4px 10px; border-radius: 20px; letter-spacing: 1px; font-weight: 700; }
+  .status-badge.active { background: rgba(0,255,120,0.15); border: 1px solid #00ff78; color: #00ff78; text-shadow: 0 0 8px #00ff78; animation: badgePulse 2s ease-in-out infinite; }
+  @keyframes badgePulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+  .status-badge.scheduled { background: rgba(255,180,0,0.15); border: 1px solid #ffb400; color: #ffb400; }
+  .module-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .stat-item { background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.1); border-radius: 8px; padding: 8px 10px; }
+  .stat-item .label { font-size: 0.6rem; color: #7ecfdf; letter-spacing: 1px; text-transform: uppercase; }
+  .stat-item .value { font-family: 'Orbitron', monospace; font-size: 0.75rem; color: #00e5ff; margin-top: 2px; }
+  .module-output { background: rgba(0,0,0,0.3); border: 1px solid rgba(0,229,255,0.08); border-radius: 8px; padding: 10px 12px; font-size: 0.72rem; color: #7ecfdf; line-height: 1.5; }
+  .module-output .output-label { color: #00e5ff; font-family: 'Orbitron', monospace; font-size: 0.6rem; letter-spacing: 1px; margin-bottom: 4px; }
+
+  .revenue-vault { background: rgba(10,8,0,0.9); border: 1px solid rgba(255,200,0,0.4); border-radius: 16px; padding: 24px; box-shadow: 0 0 30px rgba(255,200,0,0.08); margin-bottom: 24px; }
+  .vault-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .vault-title { font-family: 'Orbitron', monospace; font-size: 0.85rem; letter-spacing: 4px; color: #ffd700; text-shadow: 0 0 15px #ffd700; }
+  .vault-target { font-family: 'Orbitron', monospace; font-size: 0.7rem; color: #ffd70088; letter-spacing: 2px; }
+  .vault-numbers { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 20px; }
+  .vault-stat { text-align: center; }
+  .vault-stat .v-value { font-family: 'Orbitron', monospace; font-size: 1.4rem; color: #ffd700; text-shadow: 0 0 15px #ffd700; display: block; transition: all 0.5s; }
+  .vault-stat .v-label { font-size: 0.65rem; color: #ffd70088; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+  .progress-track { background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.2); border-radius: 50px; height: 20px; overflow: hidden; position: relative; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg,#b8860b,#ffd700,#fff8dc); border-radius: 50px; width: 0%; position: relative; overflow: hidden; transition: width 2s ease; }
+  .progress-fill::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent); animation: shimmer 2s linear infinite; }
+  @keyframes shimmer { to { left: 200%; } }
+  .progress-label { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-family: 'Orbitron', monospace; font-size: 0.65rem; color: #ffd70088; }
+
+  .footer { text-align: center; padding: 16px; font-size: 0.65rem; color: rgba(0,229,255,0.3); letter-spacing: 3px; font-family: 'Orbitron', monospace; }
+
+  @media (max-width: 900px) { .station-grid { grid-template-columns: repeat(2,1fr); } .kpi-row { grid-template-columns: repeat(2,1fr); } .vault-numbers { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 600px) { .station-grid { grid-template-columns: 1fr; } .logo { font-size: 1.2rem; } }
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<div id="gate">
+  <div class="gate-box">
+    <h1>TIMBRE</h1>
+    <p>MISSION CONTROL ACCESS</p>
+    <input type="password" id="pwInput" placeholder="ENTER ACCESS CODE" onkeydown="if(event.key==='Enter')checkPw()">
+    <button onclick="checkPw()">INITIALIZE →</button>
+    <p class="gate-error" id="gateError">⚠ ACCESS DENIED — INVALID CODE</p>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="header">
+    <div class="logo">TIMBRE<span>MISSION CONTROL</span></div>
+    <div style="text-align:center;color:#7ecfdf;font-size:0.7rem;letter-spacing:3px;">🔔 AI AUTOMATION AGENCY</div>
+    <div class="clock">
+      <span class="time" id="clock">--:--:--</span>
+      <span id="date" style="font-size:0.7rem;letter-spacing:2px;"></span>
+    </div>
+  </div>
+
+  <div class="sync-bar" id="syncBar">⟳ SYNCING WITH MISSION DATA...</div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><span class="kpi-value" id="kpi-content">—</span><div class="kpi-label">Content Pieces</div></div>
+    <div class="kpi-card"><span class="kpi-value" id="kpi-outreach">—</span><div class="kpi-label">Outreach Touches</div></div>
+    <div class="kpi-card"><span class="kpi-value" id="kpi-calls">—</span><div class="kpi-label">Calls Booked</div></div>
+    <div class="kpi-card"><span class="kpi-value" id="kpi-subs">—</span><div class="kpi-label">Email Subscribers</div></div>
+  </div>
+
+  <div class="station-grid" id="agentGrid"></div>
+
+  <div class="revenue-vault">
+    <div class="vault-header">
+      <div class="vault-title">💰 REVENUE VAULT</div>
+      <div class="vault-target">TARGET: $20,000 / MONTH BY MONTH 3</div>
+    </div>
+    <div class="vault-numbers">
+      <div class="vault-stat"><span class="v-value" id="rev-mrr">—</span><div class="v-label">Current MRR</div></div>
+      <div class="vault-stat"><span class="v-value" id="rev-pipeline">—</span><div class="v-label">Pipeline Value</div></div>
+      <div class="vault-stat"><span class="v-value" id="rev-clients">—</span><div class="v-label">Active Clients</div></div>
+      <div class="vault-stat"><span class="v-value" id="rev-proposals">—</span><div class="v-label">Proposals Sent</div></div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="revBar"></div>
+      <span class="progress-label" id="revLabel">$0 / $20,000</span>
+    </div>
+  </div>
+
+  <div class="footer">TIMBRE MISSION CONTROL v1.1 &nbsp;|&nbsp; LIVE DATA &nbsp;|&nbsp; AUTO-SYNC EVERY 60s &nbsp;|&nbsp; 🔔</div>
+</div>
+
+<script>
+  // STARS
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 150; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${Math.random()*4+2}s;animation-delay:${Math.random()*5}s;`;
+    starsEl.appendChild(s);
+  }
+
+  // PASSWORD
+  function checkPw() {
+    if (document.getElementById('pwInput').value === 'timbre2026') {
+      sessionStorage.setItem('timbre_auth', '1');
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadData();
+    } else {
+      document.getElementById('gateError').style.display = 'block';
+      document.getElementById('pwInput').value = '';
+    }
+  }
+
+  if (sessionStorage.getItem('timbre_auth') === '1') {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  }
+
+  // CLOCK
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', {hour12: false});
+    document.getElementById('date').textContent = now.toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // LIVE DATA
+  const DATA_URL = 'https://raw.githubusercontent.com/tpffounder/timbre-live-data/main/live-data.json';
+
+  function renderAgents(agents) {
+    const grid = document.getElementById('agentGrid');
+    grid.innerHTML = '';
+    const delays = [0, 0.4, 0.8, 1.2, 1.6, 2.0];
+    Object.entries(agents).forEach(([key, a], i) => {
+      const statusClass = a.status === 'active' ? 'active' : a.status === 'scheduled' ? 'scheduled' : 'standby';
+      const badgeClass = a.status === 'active' ? 'active' : 'scheduled';
+      const badgeText = a.status.toUpperCase();
+      grid.innerHTML += `
+        <div class="module ${statusClass}">
+          <div class="module-header">
+            <div class="module-icon" style="animation-delay:${delays[i]}s">${a.icon}</div>
+            <div class="module-title">
+              <h3>${a.name.toUpperCase()}</h3>
+              <p>${key.replace('agent','Agent ')} — ${a.role}</p>
+            </div>
+            <span class="status-badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <div class="module-stats">
+            <div class="stat-item"><div class="label">Last Run</div><div class="value">${a.last_run}</div></div>
+            <div class="stat-item"><div class="label">Cadence</div><div class="value">${a.cadence}</div></div>
+            <div class="stat-item"><div class="label">This Week</div><div class="value">${a.week_output}</div></div>
+            <div class="stat-item"><div class="label">Next Run</div><div class="value">${a.next_run}</div></div>
+          </div>
+          <div class="module-output">
+            <div class="output-label">LATEST OUTPUT</div>
+            ${a.latest_output}
+          </div>
+        </div>`;
+    });
+  }
+
+  function loadData() {
+    const syncBar = document.getElementById('syncBar');
+    syncBar.className = 'sync-bar syncing';
+    syncBar.textContent = '⟳ SYNCING WITH MISSION DATA...';
+
+    fetch(DATA_URL + '?t=' + Date.now())
+      .then(r => r.json())
+      .then(d => {
+        // KPIs
+        document.getElementById('kpi-content').textContent = d.kpis.content_pieces;
+        document.getElementById('kpi-outreach').textContent = d.kpis.outreach_touches;
+        document.getElementById('kpi-calls').textContent = d.kpis.calls_booked;
+        document.getElementById('kpi-subs').textContent = d.kpis.email_subscribers;
+
+        // Revenue
+        document.getElementById('rev-mrr').textContent = '$' + d.revenue.current_mrr.toLocaleString();
+        document.getElementById('rev-pipeline').textContent = '$' + d.revenue.pipeline.toLocaleString();
+        document.getElementById('rev-clients').textContent = d.revenue.active_clients;
+        document.getElementById('rev-proposals').textContent = d.revenue.proposals_sent;
+        const pct = Math.min((d.revenue.current_mrr / d.revenue.target) * 100, 100);
+        document.getElementById('revBar').style.width = Math.max(pct, 1) + '%';
+        document.getElementById('revLabel').textContent = '$' + d.revenue.current_mrr.toLocaleString() + ' / $' + d.revenue.target.toLocaleString();
+
+        // Agents
+        renderAgents(d.agents);
+
+        // Sync status
+        const t = new Date(d.last_updated);
+        syncBar.className = 'sync-bar ok';
+        syncBar.textContent = '✓ SYNCED — LAST UPDATE: ' + t.toLocaleString().toUpperCase();
+      })
+      .catch(() => {
+        syncBar.className = 'sync-bar';
+        syncBar.textContent = '⚠ SYNC ERROR — RETRYING...';
+      });
+  }
+
+  // Load on start + every 60 seconds
+  if (sessionStorage.getItem('timbre_auth') === '1') loadData();
+  setInterval(() => {
+    if (sessionStorage.getItem('timbre_auth') === '1') loadData();
+  }, 60000);
+</script>
+</body>
+</html>
