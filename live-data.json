@@ -1,0 +1,84 @@
+{
+  "last_updated": "2026-04-15T04:00:00Z",
+  "kpis": {
+    "content_pieces": 8,
+    "outreach_touches": 52,
+    "calls_booked": 1,
+    "email_subscribers": 0
+  },
+  "revenue": {
+    "current_mrr": 0,
+    "pipeline": 4000,
+    "active_clients": 0,
+    "proposals_sent": 1,
+    "target": 20000
+  },
+  "agents": {
+    "agent1": {
+      "name": "Research Bay",
+      "role": "Market Intelligence",
+      "icon": "🔍",
+      "status": "active",
+      "last_run": "Today 9:00 AM",
+      "cadence": "2x / WEEK",
+      "week_output": "2 Briefings",
+      "next_run": "Thursday",
+      "latest_output": "Top pain point: Tool sprawl (#1). Opportunity: DFY positioning massively underserved. Hook: \"Stop using 10 tools. Use 1 system.\""
+    },
+    "agent2": {
+      "name": "Strategy Core",
+      "role": "Content Strategy",
+      "icon": "🧠",
+      "status": "active",
+      "last_run": "Today 9:30 AM",
+      "cadence": "2x / WEEK",
+      "week_output": "1 Playbook",
+      "next_run": "Thursday",
+      "latest_output": "\"Stop Surviving. Start Automating.\" — Mon: Pain. Tue: Authority. Wed: Case study. Thu: Education. Fri: Offer."
+    },
+    "agent3": {
+      "name": "Content Lab",
+      "role": "Long-Form Content",
+      "icon": "✍️",
+      "status": "active",
+      "last_run": "Today 10:00 AM",
+      "cadence": "3x / WEEK",
+      "week_output": "3 Posts",
+      "next_run": "Tomorrow",
+      "latest_output": "\"She was about to hire 2 people. Instead she automated. Saved $4k/month.\" — Wednesday case study ready."
+    },
+    "agent4": {
+      "name": "Studio Pod",
+      "role": "Short-Form Video",
+      "icon": "🎬",
+      "status": "active",
+      "last_run": "Today 10:30 AM",
+      "cadence": "5x / WEEK",
+      "week_output": "5 Scripts",
+      "next_run": "Tomorrow",
+      "latest_output": "\"You're losing $500 a week and you don't even know it.\" — Monday script with 3 hook variations ready."
+    },
+    "agent5": {
+      "name": "Comms Tower",
+      "role": "Outreach & DMs",
+      "icon": "📡",
+      "status": "active",
+      "last_run": "Today 11:00 AM",
+      "cadence": "DAILY",
+      "week_output": "52 Touches",
+      "next_run": "Tomorrow",
+      "latest_output": "Warm: 5 conversations active. Cold LinkedIn: 10 requests sent. Cold Email: 10 sent. 1 proposal out."
+    },
+    "agent6": {
+      "name": "Analytics Bridge",
+      "role": "Performance",
+      "icon": "📊",
+      "status": "scheduled",
+      "last_run": "Not yet run",
+      "cadence": "WEEKLY",
+      "week_output": "0 Reports",
+      "next_run": "Sun 8:00 AM",
+      "latest_output": "First analytics report generates Sunday April 19. Will track content performance, outreach conversion, and revenue pipeline."
+    }
+  }
+}
